@@ -4,7 +4,7 @@ const { body } = require('express-validator');
 const { Document } = require('../models');
 const { auth, requireAdmin } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
-const { uploadFile, getFileUrl } = require('../utils/minio');
+const { uploadFile, getFileUrl, minioClient, bucketName } = require('../utils/minio');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -93,6 +93,61 @@ router.post('/',
     }
   }
 );
+
+// GET /api/documents/:id/view - 流式传输文件（PDF/视频）
+router.get('/:id/view', auth, async (req, res) => {
+  try {
+    const document = await Document.findByPk(req.params.id);
+    if (!document) {
+      return res.status(404).json({ error: 'Document not found' });
+    }
+
+    const stream = await minioClient.getObject(bucketName, document.fileUrl);
+    res.setHeader('Content-Type', document.mimeType || 'application/octet-stream');
+    stream.pipe(res);
+  } catch (error) {
+    console.error('View document error:', error);
+    res.status(500).json({ error: 'Failed to retrieve document' });
+  }
+});
+
+// GET /api/documents/:id/content - 提取 Word 文档内容
+router.get('/:id/content', auth, async (req, res) => {
+  try {
+    const document = await Document.findByPk(req.params.id);
+    if (!document) {
+      return res.status(404).json({ error: 'Document not found' });
+    }
+
+    if (document.fileType !== 'word') {
+      return res.status(400).json({ error: 'Only Word documents are supported' });
+    }
+
+    const stream = await minioClient.getObject(bucketName, document.fileUrl);
+
+    // 使用 mammoth 提取 HTML 内容
+    const mammoth = require('mammoth');
+    const buffer = [];
+
+    stream.on('data', chunk => buffer.push(chunk));
+    stream.on('end', async () => {
+      try {
+        const result = await mammoth.convertToHtml({ buffer: Buffer.concat(buffer) });
+        res.json({ content: result.value });
+      } catch (err) {
+        console.error('Word conversion error:', err);
+        res.status(500).json({ error: 'Failed to convert document' });
+      }
+    });
+    stream.on('error', err => {
+      console.error('Stream error:', err);
+      res.status(500).json({ error: 'Failed to read document' });
+    });
+  } catch (error) {
+    console.error('Get content error:', error);
+    res.status(500).json({ error: 'Failed to get document content' });
+  }
+});
 
 // DELETE /api/documents/:id
 router.delete('/:id', auth, requireAdmin, async (req, res) => {

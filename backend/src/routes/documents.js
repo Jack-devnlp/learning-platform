@@ -7,7 +7,30 @@ const { validate } = require('../middleware/validate');
 const { uploadFile, getFileUrl, minioClient, bucketName } = require('../utils/minio');
 
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage() });
+
+// Configure multer with file size limit and file type filter
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 50 * 1024 * 1024 // 50MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = [
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'video/mp4',
+      'video/webm',
+      'video/ogg'
+    ];
+
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only PDF, Word, and Video files are allowed.'), false);
+    }
+  }
+});
 
 // GET /api/documents
 router.get('/', auth, async (req, res) => {

@@ -38,6 +38,16 @@ app.use('/api/notifications', notificationRoutes);
 
 // Error handling
 app.use((err, req, res, next) => {
+  // Handle multer file size error
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({ error: 'File size too large. Maximum size is 50MB.' });
+  }
+
+  // Handle multer file type error
+  if (err.message === 'Invalid file type. Only PDF, Word, and Video files are allowed.') {
+    return res.status(400).json({ error: err.message });
+  }
+
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });

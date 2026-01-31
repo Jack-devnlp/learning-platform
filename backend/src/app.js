@@ -8,6 +8,7 @@ const documentRoutes = require('./routes/documents');
 const adminRoutes = require('./routes/admin');
 const userRoutes = require('./routes/users');
 const departmentRoutes = require('./routes/departments');
+const assignmentRoutes = require('./routes/assignments');
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use('/api/documents', documentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/departments', departmentRoutes);
+app.use('/api/assignments', assignmentRoutes);
 
 // Error handling
 app.use((err, req, res, next) => {

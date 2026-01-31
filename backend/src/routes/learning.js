@@ -30,4 +30,63 @@ router.get('/my-tasks', auth, async (req, res) => {
   }
 });
 
+// GET /api/learning/progress/:assignmentId
+router.get('/progress/:assignmentId', auth, async (req, res) => {
+  try {
+    const record = await LearningRecord.findOne({
+      where: {
+        userId: req.user.id,
+        assignmentId: req.params.assignmentId
+      },
+      include: [{
+        model: Assignment,
+        include: [{ model: Document, attributes: ['id', 'title', 'fileType', 'fileUrl'] }]
+      }]
+    });
+
+    if (!record) {
+      return res.status(404).json({ error: 'Learning record not found' });
+    }
+
+    res.json({ record });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get progress' });
+  }
+});
+
+// POST /api/learning/progress/:assignmentId
+router.post('/progress/:assignmentId', auth, async (req, res) => {
+  try {
+    const { progress, totalTime } = req.body;
+
+    const record = await LearningRecord.findOne({
+      where: {
+        userId: req.user.id,
+        assignmentId: req.params.assignmentId
+      }
+    });
+
+    if (!record) {
+      return res.status(404).json({ error: 'Learning record not found' });
+    }
+
+    const updateData = { progress, totalTime };
+
+    if (progress === 100 && record.status !== 'completed') {
+      updateData.status = 'completed';
+      updateData.endTime = new Date();
+    } else if (record.status === 'not_started') {
+      updateData.status = 'in_progress';
+      updateData.startTime = new Date();
+    }
+
+    await record.update(updateData);
+
+    res.json({ record });
+  } catch (error) {
+    console.error('Update progress error:', error);
+    res.status(500).json({ error: 'Failed to update progress' });
+  }
+});
+
 module.exports = router;

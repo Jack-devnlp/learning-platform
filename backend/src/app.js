@@ -4,6 +4,7 @@ const morgan = require('morgan');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
+const documentRoutes = require('./routes/documents');
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/documents', documentRoutes);
 
 // Error handling
 app.use((err, req, res, next) => {
@@ -28,7 +30,7 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log('Server running on port ' + PORT);
 });
 
 module.exports = app;
@@ -42,3 +44,7 @@ db.sequelize.authenticate()
   .catch(err => {
     console.error('Unable to connect to database:', err);
   });
+
+// Initialize MinIO bucket
+const { initBucket } = require('./utils/minio');
+initBucket();

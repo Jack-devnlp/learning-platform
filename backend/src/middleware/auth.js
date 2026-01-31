@@ -1,7 +1,14 @@
 const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  console.error('ERROR: JWT_SECRET environment variable is not set!');
+  if (process.env.NODE_ENV === 'production') {
+    process.exit(1);
+  }
+}
 
 const auth = async (req, res, next) => {
   try {

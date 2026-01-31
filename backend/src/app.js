@@ -3,6 +3,8 @@ const cors = require('cors');
 const morgan = require('morgan');
 require('dotenv').config();
 
+const authRoutes = require('./routes/auth');
+
 const app = express();
 
 // Middleware
@@ -16,6 +18,8 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+app.use('/api/auth', authRoutes);
+
 // Error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -28,3 +32,13 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
+
+const db = require('./models');
+
+db.sequelize.authenticate()
+  .then(() => {
+    console.log('Database connection established successfully.');
+  })
+  .catch(err => {
+    console.error('Unable to connect to database:', err);
+  });

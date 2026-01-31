@@ -25,6 +25,7 @@
     <el-container>
       <el-header class="header">
         <div class="header-right">
+          <notification-bell />
           <el-dropdown @command="handleCommand">
             <span class="user-info">
               {{ authStore.user?.name }}
@@ -50,9 +51,14 @@
 import { useAuthStore } from '@/store/modules/auth';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
+import NotificationBell from '@/components/NotificationBell.vue';
 
 export default {
   name: 'MainLayout',
+
+  components: {
+    NotificationBell
+  },
 
   setup() {
     const authStore = useAuthStore();

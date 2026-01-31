@@ -11,6 +11,7 @@ const departmentRoutes = require('./routes/departments');
 const assignmentRoutes = require('./routes/assignments');
 const learningRoutes = require('./routes/learning');
 const quizRoutes = require('./routes/quizzes');
+const notificationRoutes = require('./routes/notifications');
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use('/api/departments', departmentRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/learning', learningRoutes);
 app.use('/api/quizzes', quizRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Error handling
 app.use((err, req, res, next) => {

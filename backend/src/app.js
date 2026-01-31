@@ -47,9 +47,9 @@ app.listen(PORT, () => {
   console.log('Server running on port ' + PORT);
 });
 
-module.exports = app;
-
+// Initialize database and MinIO BEFORE export
 const db = require('./models');
+const { initBucket } = require('./utils/minio');
 
 db.sequelize.authenticate()
   .then(() => {
@@ -59,6 +59,6 @@ db.sequelize.authenticate()
     console.error('Unable to connect to database:', err);
   });
 
-// Initialize MinIO bucket
-const { initBucket } = require('./utils/minio');
 initBucket();
+
+module.exports = app;

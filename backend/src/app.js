@@ -42,23 +42,25 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log('Server running on port ' + PORT);
-});
-
-// Initialize database and MinIO BEFORE export
+// Initialize database and MinIO BEFORE starting server
 const db = require('./models');
 const { initBucket } = require('./utils/minio');
+
+const PORT = process.env.PORT || 3000;
 
 db.sequelize.authenticate()
   .then(() => {
     console.log('Database connection established successfully.');
+    return initBucket();
+  })
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log('Server running on port ' + PORT);
+    });
   })
   .catch(err => {
-    console.error('Unable to connect to database:', err);
+    console.error('Unable to start server:', err);
+    process.exit(1);
   });
-
-initBucket();
 
 module.exports = app;
